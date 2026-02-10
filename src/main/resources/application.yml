@@ -9,7 +9,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update #create, update, none
     show-sql: false
     database-platform: org.hibernate.dialect.MySQLDialect
 
@@ -32,6 +32,12 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 5000ms
+
   web:
     cors:
       allowed-origins:
@@ -48,12 +54,6 @@ spring:
       allow-credentials: true
       max-age: 3600
 
-  spring:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      timeout: 5000
-
 cloud:
   aws:
     credentials:
@@ -64,6 +64,7 @@ cloud:
     s3:
       bucket: ${AWS_BUCKET_NAME}
       base-url: ${CLOUDFRONT_URL}
+      endpoint: ${AWS_ENDPOINT}
       allowed-origins:
         - ${FRONTEND_REDIRECT_URI}
         - http://localhost:5173
@@ -134,7 +135,7 @@ frontend:
 
 
 sentry:
-  dsn: https://deebff1a648d832aec713b41b6754067@o4509109516435456.ingest.de.sentry.io/4509110026174544
+  dsn: https://e34538116c83c6df20a3f0e4b9e5b36a@o4509132380635136.ingest.us.sentry.io/4510821405622272
   # Add data like request headers and IP for users,
   # see https://docs.sentry.io/platforms/java/guides/spring-boot/data-management/data-collected/ for more info
   send-default-pii: true

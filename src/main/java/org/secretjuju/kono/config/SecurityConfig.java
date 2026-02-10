@@ -51,11 +51,14 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth -> auth
-				// 모든 OPTIONS 요청을 인증 없이 허용
-				.requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
-				.requestMatchers("/", "/login", "/logout", "/error", "/css/**", "/js/**", "/oauth2/**").permitAll()
-				.requestMatchers("/api/" + "**").authenticated().anyRequest().permitAll())
+		http.cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 적용
+				.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth -> auth
+						// 모든 OPTIONS 요청을 인증 없이 허용
+						.requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+						// 랭킹 조회는 인증 없이 허용 (내 랭킹 조회 제외)
+						.requestMatchers(HttpMethod.GET, "/api/v1/rankings", "/api/v1/rankings/daily").permitAll()
+						.requestMatchers("/", "/login", "/logout", "/error", "/css/**", "/js/**", "/oauth2/**")
+						.permitAll().requestMatchers("/api/" + "**").authenticated().anyRequest().permitAll())
 				.exceptionHandling(exceptionHandling -> exceptionHandling
 						.defaultAuthenticationEntryPointFor(new CustomAuthenticationEntryPoint(objectMapper),
 								new AntPathRequestMatcher("/api/**"))
@@ -95,8 +98,9 @@ public class SecurityConfig {
 		configuration.setAllowedOrigins(Arrays.asList(frontendRedirectUri, "http://localhost:5173",
 				"https://www.playcono.com", "https://playcono.com", cloudFrontRedirectUri));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept",
-				"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+		configuration.setAllowedHeaders(
+				Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin",
+						"Access-Control-Request-Method", "Access-Control-Request-Headers", "baggage", "sentry-trace"));
 		configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
 		configuration.setAllowCredentials(true);
 		configuration.setMaxAge(3600L);

@@ -11,7 +11,8 @@ sentry {
 	// Generates a JVM (Java, Kotlin, etc.) source bundle and uploads your source code to Sentry.
 	// This enables source context, allowing you to see your source
 	// code as part of your stack traces in Sentry.
-	includeSourceContext = true
+	// SENTRY_AUTH_TOKEN이 있을 때만 소스 컨텍스트 업로드 활성화
+	includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
 
 	org = "secret-juju"
 	projectName = "cono-be"
