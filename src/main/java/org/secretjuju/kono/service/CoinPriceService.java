@@ -128,8 +128,8 @@ public class CoinPriceService {
 
 	// CoinInfo 테이블에서 모든 티커 조회
 	private List<String> getAllTickers() {
-		return coinInfoRepository.findAll().stream().map(coinInfo -> "KRW-" + coinInfo.getTicker()) // "BTC" ->
-																									// "KRW-BTC" 형식으로 변환
+		return coinInfoRepository.findAll().stream().filter(coinInfo -> Boolean.TRUE.equals(coinInfo.getActive()))
+				.map(coinInfo -> "KRW-" + coinInfo.getTicker()) // "BTC" -> "KRW-BTC" 형식으로 변환
 				.collect(Collectors.toList());
 	}
 

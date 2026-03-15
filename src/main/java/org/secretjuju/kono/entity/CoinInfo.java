@@ -32,6 +32,10 @@ public class CoinInfo {
 	@Column(name = "ticker", nullable = false, unique = true, length = 50)
 	private String ticker;
 
+	// 활성화 여부: true일 때 서비스에서 사용
+	@Column(name = "active", nullable = false)
+	private Boolean active = true;
+
 	// 양방향 관계 설정
 	@OneToMany(mappedBy = "coinInfo", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private List<CoinTransaction> transactions = new ArrayList<>();

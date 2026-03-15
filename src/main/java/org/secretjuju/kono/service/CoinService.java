@@ -46,12 +46,12 @@ public class CoinService {
 	}
 
 	public List<CoinInfoResponseDto> getAllCoinInfo() {
-		List<CoinInfo> coinInfos = coinRepository.findAll();
+		List<CoinInfo> coinInfos = coinRepository.findAllByActiveTrue();
 		return coinInfos.stream().map(this::convertToCoinInfosResponse).collect(Collectors.toList());
 	}
 
 	public CoinResponseDto getCoinByName(CoinRequestDto coinRequestDto) {
-		Optional<CoinInfo> coinInfo = coinRepository.findByTicker(coinRequestDto.getTicker());
+		Optional<CoinInfo> coinInfo = coinRepository.findByTickerAndActiveTrue(coinRequestDto.getTicker());
 		CoinResponseDto coinResponseDto = new CoinResponseDto(coinInfo.orElse(null));
 		return coinResponseDto;
 	}
@@ -70,7 +70,7 @@ public class CoinService {
 		User currentUser = userService.getCurrentUser();
 
 		// 해당 코인 정보를 가져옵니다.
-		Optional<CoinInfo> coinInfoOpt = coinRepository.findByTicker(coinSellBuyRequestDto.getTicker());
+		Optional<CoinInfo> coinInfoOpt = coinRepository.findByTickerAndActiveTrue(coinSellBuyRequestDto.getTicker());
 		if (coinInfoOpt.isEmpty()) {
 			throw new CustomException(404, "해당 코인을 찾을 수 없습니다.");
 		}

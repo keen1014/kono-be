@@ -10,5 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CoinInfoRepository extends JpaRepository<CoinInfo, Integer> {
 	Optional<CoinInfo> findByTicker(String ticker);
+	Optional<CoinInfo> findByTickerAndActiveTrue(String ticker);
 	List<CoinInfo> findAll();
+	List<CoinInfo> findAllByActiveTrue();
 }

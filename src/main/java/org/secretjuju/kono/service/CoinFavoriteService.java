@@ -44,8 +44,8 @@ public class CoinFavoriteService {
 	}
 	public boolean isFavorite(Integer userId, String ticker) {
 		// ticker로 코인 정보 조회
-		CoinInfo coinInfo = coinInfoRepository.findByTicker(ticker)
-				.orElseThrow(() -> new RuntimeException("Coin not found with ticker: " + ticker));
+		CoinInfo coinInfo = coinInfoRepository.findByTickerAndActiveTrue(ticker)
+				.orElseThrow(() -> new RuntimeException("Coin not found or inactive with ticker: " + ticker));
 
 		// 해당 사용자가 이 코인을 관심 목록에 추가했는지 확인
 		return coinFavoriteRepository.existsByUserIdAndCoinInfoId(userId, coinInfo.getId());

@@ -49,14 +49,17 @@ public class CoinInfoSyncService {
 			Map<String, CoinInfo> dbCoinMap = dbCoinInfos.stream()
 					.collect(Collectors.toMap(CoinInfo::getTicker, Function.identity()));
 
-			// 4. 삭제 대상 처리 (DB에는 있지만 API에는 없는 경우)
-			List<CoinInfo> toDelete = dbCoinInfos.stream().filter(coin -> !apiMarketMap.containsKey(coin.getTicker()))
-					.collect(Collectors.toList());
+			// 4. 삭제 대상 처리 -> 즉시 삭제하지 말고 비활성화 처리
+			List<CoinInfo> toDeactivate = dbCoinInfos.stream()
+					.filter(coin -> !apiMarketMap.containsKey(coin.getTicker())).collect(Collectors.toList());
 
-			if (!toDelete.isEmpty()) {
-				coinInfoRepository.deleteAll(toDelete);
-				log.info("{}개의 코인이 삭제되었습니다: {}", toDelete.size(),
-						toDelete.stream().map(CoinInfo::getTicker).collect(Collectors.toList()));
+			if (!toDeactivate.isEmpty()) {
+				for (CoinInfo coin : toDeactivate) {
+					if (Boolean.TRUE.equals(coin.getActive())) {
+						coin.setActive(false);
+						log.info("코인 비활성화 처리: {}", coin.getTicker());
+					}
+				}
 			}
 
 			// 5. 추가 및 업데이트 대상 처리
@@ -70,16 +73,36 @@ public class CoinInfoSyncService {
 					CoinInfo existingCoin = dbCoinMap.get(ticker);
 					if (!existingCoin.getKrCoinName().equals(koreanName)) {
 						existingCoin.setKrCoinName(koreanName);
-						// Dirty Checking에 의해 자동 업데이트됨
 						log.info("코인 이름 업데이트: {} -> {}", existingCoin.getTicker(), koreanName);
 					}
+					// 활성화 처리
+					if (!Boolean.TRUE.equals(existingCoin.getActive())) {
+						existingCoin.setActive(true);
+						log.info("코인 재활성화: {}", existingCoin.getTicker());
+					}
 				} else {
-					// 새로운 코인 추가
-					CoinInfo newCoin = new CoinInfo();
-					newCoin.setTicker(ticker);
-					newCoin.setKrCoinName(koreanName);
-					coinInfoRepository.save(newCoin);
-					log.info("새로운 코인 추가: {} ({})", ticker, koreanName);
+					// 티커가 DB에 없을 때, 같은 이름으로 기존 코인이 있는지 확인하여 "리네임" 가능성 처리
+					CoinInfo matchedByName = dbCoinInfos.stream()
+							.filter(ci -> (ci.getKrCoinName() != null && ci.getKrCoinName().equals(koreanName))
+									|| (ci.getTicker() != null && ci.getTicker().equalsIgnoreCase(ticker)))
+							.findFirst().orElse(null);
+
+					if (matchedByName != null) {
+						// 기존 레코드의 ticker를 업데이트(리네임 처리)하고 활성화
+						String oldTicker = matchedByName.getTicker();
+						matchedByName.setTicker(ticker);
+						matchedByName.setKrCoinName(koreanName);
+						matchedByName.setActive(true);
+						log.info("티커 리네임 처리: {} -> {} (이름: {})", oldTicker, ticker, koreanName);
+					} else {
+						// 새로운 코인 추가
+						CoinInfo newCoin = new CoinInfo();
+						newCoin.setTicker(ticker);
+						newCoin.setKrCoinName(koreanName);
+						newCoin.setActive(true);
+						coinInfoRepository.save(newCoin);
+						log.info("새로운 코인 추가: {} ({})", ticker, koreanName);
+					}
 				}
 			}
 
